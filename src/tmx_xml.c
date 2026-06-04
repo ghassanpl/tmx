@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <libxml/xmlreader.h>
 
@@ -89,7 +90,7 @@ static int parse_property(xmlTextReaderPtr reader, tmx_property *prop) {
 				break;
 		}
 	} else if (prop->type == PT_NONE || prop->type == PT_STRING) {
-		if (!(value = (char*)xmlTextReaderReadInnerXml(reader))) {
+		if (!(value = (char*)xmlTextReaderReadString(reader))) {
 			tmx_err(E_MISSEL, "xml parser: missing 'value' attribute or inner XML for the 'property' element");
 		}
 		prop->value.string = value;
@@ -251,7 +252,7 @@ static int parse_text(xmlTextReaderPtr reader, tmx_text *text) {
 		tmx_free_func(value);
 	}
 
-	if ((value = (char*)xmlTextReaderReadInnerXml(reader))) {
+	if ((value = (char*)xmlTextReaderReadString(reader))) {
 		text->text = value;
 	}
 
@@ -352,7 +353,20 @@ static int parse_object(xmlTextReaderPtr reader, tmx_object *obj, int is_on_map,
 
 	if ((value = (char*)xmlTextReaderGetAttribute(reader, (xmlChar*)"gid"))) { /* gid */
 		obj->obj_type = OT_TILE;
-		obj->content.gid = atoi(value);
+
+		unsigned long long gid = strtoull(value, NULL, 0);
+		if (!gid) {
+			tmx_err(E_RANGE, "xml parser: object %u has invalid gid '%s'", obj->id, value);
+			tmx_free_func(value);
+			return 0;
+		}
+		if (gid > UINT_MAX) {
+			tmx_err(E_RANGE, "xml parser: object %u has out-of-range gid '%s'", obj->id, value);
+			tmx_free_func(value);
+			return 0;
+		}
+
+		obj->content.gid = (unsigned int)gid;
 		tmx_free_func(value);
 	}
 
@@ -412,7 +426,7 @@ static int parse_data(xmlTextReaderPtr reader, uint32_t **gidsadr, size_t gidsco
 		return 0;
 	}
 
-	if (!(inner_xml = (char*)xmlTextReaderReadInnerXml(reader))) {
+	if (!(inner_xml = (char*)xmlTextReaderReadString(reader))) {
 		tmx_err(E_XDATA, "xml parser: missing content in the 'data' element");
 		tmx_free_func(value);
 		return 0;

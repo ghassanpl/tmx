@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
-project(tmx VERSION 1.4.0 LANGUAGES C)
+project(tmx VERSION 1.10.1 LANGUAGES C)
 
 add_subdirectory(doc) # Sphinx documentation
 
@@ -104,5 +104,5 @@ install(FILES ${HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT tmx_exports
         FILE "tmxExports.cmake"
         DESTINATION "lib/cmake/tmx")
-install(FILES "${CMAKE_BINARY_DIR}/tmxConfig.cmake" "${CMAKE_BINARY_DIR}/tmxConfigVersion.cmake"
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/tmxConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/tmxConfigVersion.cmake"
         DESTINATION "lib/cmake/tmx")
